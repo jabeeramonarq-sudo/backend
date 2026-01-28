@@ -9,11 +9,33 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middleware - CORS Configuration
+const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://www.amonarq.com',
+    'https://amonarq.com',
+    'https://api.amonarq.com'
+];
+
 app.use(cors({
-    origin: '*', // For development, allow all. Refine for production.
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, Postman)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('localhost')) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked origin:', origin);
+            callback(null, true); // Allow all for now, log blocked origins
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 86400 // 24 hours
 }));
 app.use(express.json());
 
