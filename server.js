@@ -19,8 +19,14 @@ app.use(express.json());
 
 // MongoDB Connection
 const mongoOptions = {
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 30000, // Increased from 5000ms
     socketTimeoutMS: 45000,
+    maxPoolSize: 10,
+    minPoolSize: 2,
+    retryWrites: true,
+    retryReads: true,
+    bufferCommands: false, // Disable buffering to fail fast
+    autoIndex: true,
 };
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amonarq', mongoOptions)
@@ -31,6 +37,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amonarq',
     .catch(err => {
         console.error('❌ MongoDB connection error:', err.message);
         console.error('Full error:', err);
+        process.exit(1); // Exit if initial connection fails
     });
 
 // Handle connection events
