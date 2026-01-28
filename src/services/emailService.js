@@ -1,73 +1,156 @@
 const nodemailer = require('nodemailer');
 
+// Create transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: process.env.EMAIL_PORT || 587,
+    secure: false, // true for 465, false for other ports
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
     }
 });
 
-const sendEmail = async ({ to, subject, html }) => {
+// Send invitation email
+const sendInvitationEmail = async (email, token) => {
+    const invitationUrl = `${process.env.FRONTEND_URL}/invite/${token}`;
+
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: email,
+        subject: 'You\'ve been invited to join Amonarq Admin Panel',
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                    .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Welcome to Amonarq</h1>
+                    </div>
+                    <div class="content">
+                        <p>Hello,</p>
+                        <p>You've been invited to join the Amonarq Admin Panel. Click the button below to complete your registration and set up your account.</p>
+                        <p style="text-align: center;">
+                            <a href="${invitationUrl}" class="button">Complete Registration</a>
+                        </p>
+                        <p>Or copy and paste this link into your browser:</p>
+                        <p style="word-break: break-all; color: #667eea;">${invitationUrl}</p>
+                        <p><strong>Note:</strong> This invitation link will expire in 48 hours.</p>
+                        <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Amonarq. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `
+    };
+
     try {
-        const info = await transporter.sendMail({
-            from: `"${process.env.SITE_NAME || 'Amonarq'}" <${process.env.SMTP_USER}>`,
-            to,
-            subject,
-            html
-        });
-        console.log('Email sent: %s', info.messageId);
-        return info;
+        await transporter.sendMail(mailOptions);
+        console.log(`Invitation email sent to ${email}`);
+        return true;
     } catch (error) {
         console.error('Error sending email:', error);
         throw error;
     }
 };
 
-const sendInviteEmail = async (user, inviteLink) => {
-    const html = `
-        <h1>Welcome to Amonarq Admin Panel</h1>
-        <p>Hello ${user.name},</p>
-        <p>You have been invited to manage the Amonarq website. Please click the link below to set your password and activate your account:</p>
-        <a href="${inviteLink}">${inviteLink}</a>
-        <p>This link will expire in 24 hours.</p>
-    `;
-    return sendEmail({ to: user.email, subject: 'Admin Invitation', html });
+// Send contact form email
+const sendContactEmail = async (name, email, subject, message) => {
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: process.env.CONTACT_RECEIVER_EMAIL,
+        replyTo: email,
+        subject: `Contact Form: ${subject}`,
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+                    .header { background: #667eea; color: white; padding: 20px; text-align: center; }
+                    .content { background: white; padding: 30px; margin-top: 20px; }
+                    .field { margin-bottom: 15px; }
+                    .label { font-weight: bold; color: #667eea; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h2>New Contact Form Submission</h2>
+                    </div>
+                    <div class="content">
+                        <div class="field">
+                            <div class="label">From:</div>
+                            <div>${name}</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Email:</div>
+                            <div>${email}</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Subject:</div>
+                            <div>${subject}</div>
+                        </div>
+                        <div class="field">
+                            <div class="label">Message:</div>
+                            <div>${message}</div>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Contact form email sent from ${email}`);
+        return true;
+    } catch (error) {
+        console.error('Error sending contact email:', error);
+        throw error;
+    }
 };
 
-const sendResetPasswordEmail = async (user, resetLink) => {
-    const html = `
-        <h1>Reset Your Password</h1>
-        <p>Hello ${user.name},</p>
-        <p>You requested a password reset. Please click the link below to reset your password:</p>
-        <a href="${resetLink}">${resetLink}</a>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you did not request this, please ignore this email.</p>
-    `;
-    return sendEmail({ to: user.email, subject: 'Password Reset Request', html });
-};
+// Send test email
+const sendTestEmail = async (email) => {
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: email,
+        subject: 'Test Email from Amonarq',
+        html: `
+            <h1>Email Configuration Test</h1>
+            <p>If you're reading this, your Nodemailer configuration is working correctly!</p>
+            <p>Sent at: ${new Date().toLocaleString()}</p>
+        `
+    };
 
-const sendContactNotification = async (contact) => {
-    const html = `
-        <h1>New Contact Inquiry</h1>
-        <p><strong>Name:</strong> ${contact.name}</p>
-        <p><strong>Email:</strong> ${contact.email}</p>
-        <p><strong>Subject:</strong> ${contact.subject}</p>
-        <p><strong>Message:</strong></p>
-        <p>${contact.message}</p>
-    `;
-    return sendEmail({
-        to: process.env.ADMIN_EMAIL,
-        subject: `New Inquiry: ${contact.subject}`,
-        html
-    });
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Test email sent to ${email}`);
+        return true;
+    } catch (error) {
+        console.error('Error sending test email:', error);
+        throw error;
+    }
 };
 
 module.exports = {
-    sendEmail,
-    sendInviteEmail,
-    sendResetPasswordEmail,
-    sendContactNotification
+    sendInvitationEmail,
+    sendContactEmail,
+    sendTestEmail
 };

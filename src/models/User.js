@@ -4,28 +4,20 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String },
-    role: { type: String, enum: ['admin', 'superadmin'], default: 'admin' },
-    isInvited: { type: Boolean, default: false },
-    inviteToken: { type: String },
-    inviteExpires: { type: Date },
-    resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date },
-    createdAt: { type: Date, default: Date.now }
+    password: { type: String, required: true },
+    role: { type: String, default: 'admin', enum: ['admin', 'superadmin'] },
+    invitationToken: { type: String, unique: true, sparse: true },
+    invitationExpires: { type: Date },
+    isActive: { type: Boolean, default: false }
+}, { timestamps: true });
+
+userSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
+    this.password = await bcrypt.hash(this.password, 10);
 });
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password') || !this.password) return next();
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-});
-
-// Compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
-    if (!this.password) return false;
-    return bcrypt.compare(candidatePassword, this.password);
+    return await bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model('User', userSchema);

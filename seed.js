@@ -1,35 +1,32 @@
 const mongoose = require('mongoose');
+const User = require('./src/models/User');
 const dotenv = require('dotenv');
-const Content = require('./src/models/Content');
 
 dotenv.config();
 
-const defaultContent = [
-    { page: 'home', key: 'hero_title', value: 'Continuity & Trust', type: 'text' },
-    { page: 'home', key: 'hero_subtitle', value: 'Investing in legacy, protecting the future. Amonarq provides strategic capital and operational expertise to family-owned businesses.', type: 'rich-text' },
-    { page: 'about', key: 'about_title', value: 'Our Heritage', type: 'text' },
-    { page: 'contact', key: 'contact_title', value: 'Start a Dialogue', type: 'text' }
-];
-
-const seedDB = async () => {
+const seedAdmin = async () => {
     try {
+        console.log('Connecting to MongoDB...');
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log('Connected to MongoDB for seeding...');
+        console.log('Connected. Checking for existing admin...');
 
-        for (const item of defaultContent) {
-            await Content.findOneAndUpdate(
-                { page: item.page, key: item.key },
-                item,
-                { upsate: true, new: true, upsert: true }
-            );
+        const existingAdmin = await User.findOne({ email: process.env.ADMIN_EMAIL || 'admin@amonarq.com' });
+        if (existingAdmin) {
+            console.log('Admin already exists');
+        } else {
+            console.log('Creating admin user...');
+            const admin = new User({
+                email: process.env.ADMIN_EMAIL || 'admin@amonarq.com',
+                password: process.env.ADMIN_PASS || 'admin123'
+            });
+            await admin.save();
+            console.log('Admin user created successfully');
         }
 
-        console.log('Database seeded successfully!');
-        process.exit();
+        mongoose.connection.close();
     } catch (error) {
-        console.error('Error seeding database:', error);
-        process.exit(1);
+        console.error('Seeding failed:', error);
     }
 };
 
-seedDB();
+seedAdmin();
