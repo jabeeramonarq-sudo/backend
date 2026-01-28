@@ -59,7 +59,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amonarq',
     .catch(err => {
         console.error('❌ MongoDB connection error:', err.message);
         console.error('Full error:', err);
-        process.exit(1); // Exit if initial connection fails
+        // Don't exit in serverless - let it retry on next request
     });
 
 // Handle connection events
@@ -85,11 +85,20 @@ app.use('/api/email', require('./src/routes/emailRoutes'));
 // Health check
 app.get('/health', (req, res) => res.status(200).send('API is healthy'));
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    });
+});
+
 // Export for Vercel serverless
 module.exports = app;
 
 // Only listen on port if not in serverless environment
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
