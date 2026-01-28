@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Settings = require('../models/Settings');
 const auth = require('../middleware/auth');
@@ -12,6 +13,13 @@ router.get('/', async (req, res) => {
         res.set('Expires', '0');
 
         console.log('Fetching settings...');
+        
+        // Check if MongoDB is connected
+        if (mongoose.connection.readyState !== 1) {
+            console.log('MongoDB not connected, attempting to reconnect...');
+            await mongoose.connect(process.env.MONGODB_URI);
+        }
+        
         let settings = await Settings.findOne();
         console.log('Settings found:', settings ? 'Yes' : 'No');
 
@@ -24,9 +32,20 @@ router.get('/', async (req, res) => {
         res.json(settings);
     } catch (error) {
         console.error('Settings route error:', error);
+        console.error('Error name:', error.name);
+        console.error('Error code:', error.code);
+        
+        // Specific error handling
+        if (error.name === 'MongooseServerSelectionError') {
+            return res.status(503).json({
+                error: 'Database connection failed',
+                message: 'Unable to connect to database. Please check configuration.'
+            });
+        }
+        
         res.status(500).json({
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: 'Failed to fetch settings',
+            message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
         });
     }
 });

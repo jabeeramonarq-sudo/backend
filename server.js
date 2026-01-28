@@ -49,8 +49,12 @@ const mongoOptions = {
     retryReads: true,
     bufferCommands: false, // Disable buffering to fail fast
     autoIndex: true,
+    // Serverless-specific options
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
 };
 
+// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amonarq', mongoOptions)
     .then(() => {
         console.log('✅ Connected to MongoDB');

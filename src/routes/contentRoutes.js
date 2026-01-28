@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Content = require('../models/Content');
 const auth = require('../middleware/auth');
@@ -12,15 +13,33 @@ router.get('/', async (req, res) => {
         res.set('Expires', '0');
 
         console.log('Fetching content...');
+        
+        // Check if MongoDB is connected
+        if (mongoose.connection.readyState !== 1) {
+            console.log('MongoDB not connected, attempting to reconnect...');
+            await mongoose.connect(process.env.MONGODB_URI);
+        }
+        
         const content = await Content.find({ isActive: true }).sort({ order: 1 });
         console.log('Content found:', content.length, 'items');
 
         res.json(content);
     } catch (error) {
         console.error('Content route error:', error);
+        console.error('Error name:', error.name);
+        console.error('Error code:', error.code);
+        
+        // Specific error handling
+        if (error.name === 'MongooseServerSelectionError') {
+            return res.status(503).json({
+                error: 'Database connection failed',
+                message: 'Unable to connect to database. Please check configuration.'
+            });
+        }
+        
         res.status(500).json({
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: 'Failed to fetch content',
+            message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
         });
     }
 });
