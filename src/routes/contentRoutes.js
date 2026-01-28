@@ -11,10 +11,17 @@ router.get('/', async (req, res) => {
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
 
+        console.log('Fetching content...');
         const content = await Content.find({ isActive: true }).sort({ order: 1 });
+        console.log('Content found:', content.length, 'items');
+
         res.json(content);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Content route error:', error);
+        res.status(500).json({
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 

@@ -11,14 +11,23 @@ router.get('/', async (req, res) => {
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
 
+        console.log('Fetching settings...');
         let settings = await Settings.findOne();
+        console.log('Settings found:', settings ? 'Yes' : 'No');
+
         if (!settings) {
+            console.log('Creating default settings...');
             settings = new Settings();
             await settings.save();
+            console.log('Default settings created');
         }
         res.json(settings);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Settings route error:', error);
+        res.status(500).json({
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 

@@ -18,9 +18,29 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amonarq')
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+const mongoOptions = {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+};
+
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amonarq', mongoOptions)
+    .then(() => {
+        console.log('✅ Connected to MongoDB');
+        console.log('Database:', mongoose.connection.name);
+    })
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err.message);
+        console.error('Full error:', err);
+    });
+
+// Handle connection events
+mongoose.connection.on('error', err => {
+    console.error('MongoDB error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.warn('MongoDB disconnected');
+});
 
 // Routes
 app.use('/api/auth', require('./src/routes/authRoutes'));
@@ -36,6 +56,12 @@ app.use('/api/email', require('./src/routes/emailRoutes'));
 // Health check
 app.get('/health', (req, res) => res.status(200).send('API is healthy'));
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Export for Vercel serverless
+module.exports = app;
+
+// Only listen on port if not in serverless environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
