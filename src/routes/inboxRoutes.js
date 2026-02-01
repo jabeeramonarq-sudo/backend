@@ -9,7 +9,27 @@ const auth = require('../middleware/auth');
 router.post('/submit', async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
-        const newContact = new Contact({ name, email, subject, message });
+
+        // Backend Validation
+        if (!name || name.trim().length < 2) {
+            return res.status(400).json({ error: 'Name must be at least 2 characters' });
+        }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ error: 'Please provide a valid email address' });
+        }
+        if (!subject || subject.trim().length < 2) {
+            return res.status(400).json({ error: 'Subject must be at least 2 characters' });
+        }
+        if (!message || message.trim().length < 2) {
+            return res.status(400).json({ error: 'Message must be at least 2 characters' });
+        }
+
+        const newContact = new Contact({
+            name: name.trim(),
+            email: email.trim(),
+            subject: subject.trim(),
+            message: message.trim()
+        });
         await newContact.save();
 
         // Send notification email to admin
@@ -22,7 +42,8 @@ router.post('/submit', async (req, res) => {
 
         res.status(201).json({ message: 'Message sent successfully' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Submission error:', error);
+        res.status(500).json({ error: 'An internal server error occurred. Please try again later.' });
     }
 });
 
