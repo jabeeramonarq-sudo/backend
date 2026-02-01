@@ -236,11 +236,12 @@ const seedContent = [
     { sectionId: 'life-events-matter-1', title: 'Clarity for everyone', body: 'Everyone involved knows what\'s expected and where to find information.', order: 65 },
     { sectionId: 'life-events-matter-2', title: 'Less confusion', body: 'Reduces chaos and misunderstandings during critical moments.', order: 66 },
     { sectionId: 'life-events-matter-3', title: 'Clear intent', body: 'Your wishes and responsibilities are documented and respected.', order: 67 },
+    { sectionId: 'life-events-matter-4', title: 'Privacy Focused', body: 'Built with zero-knowledge architecture and consent-driven access.', order: 68 },
     {
         sectionId: 'life-events-cta',
         title: 'See how Life Events work with continuity',
         body: 'Learn how MyNxt ensures your Life Events are protected for the future.',
-        order: 68
+        order: 69
     },
 
     // --- CONSENT PAGE ---
@@ -627,7 +628,7 @@ const seedSettings = {
     },
     socialMedia: [
         { platform: 'LinkedIn', url: 'https://linkedin.com/company/amonarq', icon: 'linkedin' },
-        { platform: 'Twitter', url: 'https://twitter.com/amonarq', icon: 'twitter' }
+        { platform: 'X', url: 'https://x.com/amonarq', icon: 'twitter' }
     ]
 };
 
