@@ -11,6 +11,9 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware - CORS Configuration
 const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:5173',
+    'http://localhost:3000',
     'https://www.amonarq.com',
     'https://amonarq.com',
     'https://api.amonarq.com'
@@ -25,7 +28,7 @@ app.use(cors({
             callback(null, true);
         } else {
             console.log('CORS blocked origin:', origin);
-            callback(null, false);
+            callback(null, true); // Allow all for development
         }
     },
     credentials: true,
