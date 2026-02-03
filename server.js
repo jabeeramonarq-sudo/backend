@@ -76,7 +76,6 @@ app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/invitations', require('./src/routes/invitationRoutes'));
 app.use('/api/settings', require('./src/routes/settingsRoutes'));
-app.use('/api/content', require('./src/routes/contentRoutes'));
 app.use('/api/inbox', require('./src/routes/inboxRoutes'));
 app.use('/api/upload', require('./src/routes/uploadRoutes'));
 app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
