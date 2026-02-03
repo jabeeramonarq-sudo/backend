@@ -1,9 +1,8 @@
-// Vercel serverless function entry point - fallback route
 import Cors from 'cors';
 
 // Initialize Cors
 const cors = Cors({
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'HEAD'],
   origin: [
     process.env.FRONTEND_URL || 'https://www.amonarq.com',
     'https://www.amonarq.com',
@@ -28,20 +27,15 @@ export default async function handler(req, res) {
   // Run cors middleware
   await runMiddleware(req, res, cors);
 
-  // Return a helpful message about available routes
-  return res.status(404).json({ 
-    error: 'Route not found', 
-    available_routes: [
-      '/api/settings',
-      '/api/inbox/submit',
-      '/health'
-    ],
-    message: 'Please use one of the available API routes'
-  });
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).send('API is healthy');
 }
 
 export const config = {
   api: {
-    bodyParser: true,
+    bodyParser: false,
   },
 };
