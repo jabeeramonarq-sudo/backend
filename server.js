@@ -47,7 +47,7 @@ const mongoOptions = {
     minPoolSize: 2,
     retryWrites: true,
     retryReads: true,
-    bufferCommands: false, // Disable buffering to fail fast
+    // bufferCommands: true, // Enable buffering (default)
     autoIndex: true,
 };
 
