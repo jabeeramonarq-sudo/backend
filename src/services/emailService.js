@@ -4,10 +4,10 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: process.env.EMAIL_PORT || 587,
-    secure: false, // true for 465, false for other ports
+    secure: Number(process.env.EMAIL_PORT || 587) === 465, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
+        pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS
     }
 });
 
@@ -71,7 +71,7 @@ const sendInvitationEmail = async (email, token) => {
 const sendContactEmail = async (name, email, subject, message) => {
     const mailOptions = {
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-        to: process.env.CONTACT_RECEIVER_EMAIL,
+        to: process.env.CONTACT_RECEIVER_EMAIL || process.env.EMAIL_USER,
         replyTo: email,
         subject: `Contact Form: ${subject}`,
         html: `
