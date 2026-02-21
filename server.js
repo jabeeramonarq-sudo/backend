@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
@@ -39,6 +40,7 @@ app.use(cors({
     maxAge: 86400 // 24 hours
 }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 const mongoOptions = {
@@ -81,6 +83,7 @@ app.use('/api/inbox', require('./src/routes/inboxRoutes'));
 app.use('/api/upload', require('./src/routes/uploadRoutes'));
 app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
 app.use('/api/email', require('./src/routes/emailRoutes'));
+app.use('/api/content', require('./src/routes/contentRoutes'));
 
 // Health check
 app.get('/health', (req, res) => res.status(200).send('API is healthy'));

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { upload } = require('../config/cloudinary');
+const { upload, hasCloudinary } = require('../config/cloudinary');
 const auth = require('../middleware/auth');
 
 router.post('/image', auth, upload.single('image'), (req, res) => {
@@ -8,7 +8,10 @@ router.post('/image', auth, upload.single('image'), (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        res.json({ url: req.file.path });
+        const url = hasCloudinary
+            ? req.file.path
+            : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        res.json({ url });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -21,9 +24,13 @@ router.post('/assets', auth, upload.fields([
 ]), (req, res) => {
     try {
         const urls = {};
-        if (req.files.logo) urls.logo = req.files.logo[0].path;
-        if (req.files.footerLogo) urls.footerLogo = req.files.footerLogo[0].path;
-        if (req.files.favicon) urls.favicon = req.files.favicon[0].path;
+        const fileUrl = (file) => hasCloudinary
+            ? file.path
+            : `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+
+        if (req.files.logo) urls.logo = fileUrl(req.files.logo[0]);
+        if (req.files.footerLogo) urls.footerLogo = fileUrl(req.files.footerLogo[0]);
+        if (req.files.favicon) urls.favicon = fileUrl(req.files.favicon[0]);
 
         res.json(urls);
     } catch (error) {

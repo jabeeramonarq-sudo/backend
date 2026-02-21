@@ -626,6 +626,9 @@ const seedSettings = {
         phone: '+91 00000 00000',
         mapsUrl: ''
     },
+    contactForm: {
+        recipientEmail: 'contact@amonarq.com'
+    },
     socialMedia: [
         { platform: 'LinkedIn', url: 'https://linkedin.com/company/amonarq', icon: 'linkedin' },
         { platform: 'X', url: 'https://x.com/amonarq', icon: 'twitter' }

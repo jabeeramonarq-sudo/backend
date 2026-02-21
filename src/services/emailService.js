@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const Settings = require('../models/Settings');
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -10,6 +11,28 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS
     }
 });
+
+const parseRecipientList = (value) => {
+    if (!value) return [];
+    return String(value)
+        .split(/[\n,;]+/)
+        .map((email) => email.trim())
+        .filter(Boolean);
+};
+
+const resolveContactRecipientEmail = async () => {
+    try {
+        const settings = await Settings.findOne().lean();
+        const settingsEmails = parseRecipientList(settings?.contactForm?.recipientEmail);
+        if (settingsEmails.length > 0) return settingsEmails;
+    } catch (error) {
+        console.error('Failed to load contact recipient email from settings:', error.message);
+    }
+
+    const envEmails = parseRecipientList(process.env.CONTACT_RECEIVER_EMAIL);
+    if (envEmails.length > 0) return envEmails;
+    return parseRecipientList(process.env.EMAIL_USER);
+};
 
 // Send invitation email
 const sendInvitationEmail = async (email, token) => {
@@ -69,9 +92,11 @@ const sendInvitationEmail = async (email, token) => {
 
 // Send contact form email
 const sendContactEmail = async (name, email, subject, message) => {
+    const recipientEmails = await resolveContactRecipientEmail();
+
     const mailOptions = {
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-        to: process.env.CONTACT_RECEIVER_EMAIL || process.env.EMAIL_USER,
+        to: recipientEmails,
         replyTo: email,
         subject: `Contact Form: ${subject}`,
         html: `
@@ -118,7 +143,7 @@ const sendContactEmail = async (name, email, subject, message) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Contact form email sent from ${email}`);
+        console.log(`Contact form email sent from ${email} to ${recipientEmails.join(', ')}`);
         return true;
     } catch (error) {
         console.error('Error sending contact email:', error);

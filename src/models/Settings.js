@@ -12,6 +12,9 @@ const settingsSchema = new mongoose.Schema({
         phone: { type: String, default: '' },
         mapsUrl: { type: String, default: '' }
     },
+    contactForm: {
+        recipientEmail: { type: String, default: '' }
+    },
     socialMedia: [
         {
             platform: { type: String },
