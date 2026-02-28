@@ -18,7 +18,27 @@ router.post('/login', async (req, res) => {
             return res.status(403).json({ error: 'Your access has been disabled. Contact super admin.' });
         }
 
-        const isMatch = await user.comparePassword(password);
+        if (!user.password) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        let isMatch = false;
+        try {
+            // Legacy records may contain a non-bcrypt password value.
+            if (typeof user.password === 'string' && user.password.startsWith('$2')) {
+                isMatch = await user.comparePassword(password);
+            } else {
+                isMatch = String(password) === String(user.password);
+                if (isMatch) {
+                    // Re-save to trigger hashing and normalize future logins.
+                    user.password = password;
+                    await user.save();
+                }
+            }
+        } catch (compareErr) {
+            console.error('Password comparison failed:', compareErr.message);
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
         console.log('Password comparison result:', isMatch);
 
         if (!isMatch) {
