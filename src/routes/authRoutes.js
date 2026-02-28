@@ -14,6 +14,10 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
+        if (user.isActive === false) {
+            return res.status(403).json({ error: 'Your access has been disabled. Contact super admin.' });
+        }
+
         const isMatch = await user.comparePassword(password);
         console.log('Password comparison result:', isMatch);
 
@@ -47,7 +51,7 @@ router.post('/setup-superadmin', async (req, res) => {
         }
 
         const { name, email, password } = req.body;
-        const admin = new User({ name, email, password, role: 'superadmin' });
+        const admin = new User({ name, email, password, role: 'superadmin', isActive: true });
         await admin.save();
 
         res.status(201).json({ message: 'Super Admin created successfully' });
@@ -88,6 +92,7 @@ router.post('/reset-superadmin', async (req, res) => {
             admin.email = email;
             admin.password = password;
             admin.role = 'superadmin';
+            admin.isActive = true;
         }
 
         await admin.save();

@@ -41,7 +41,8 @@ router.post('/', auth, isSuperAdmin, async (req, res) => {
             name,
             email,
             password,
-            role: role || 'admin'
+            role: role || 'admin',
+            isActive: true
         });
 
         await user.save();
@@ -78,6 +79,34 @@ router.put('/:id', auth, isSuperAdmin, async (req, res) => {
         const userResponse = user.toObject();
         delete userResponse.password;
 
+        res.json(userResponse);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Toggle user access (super admin only)
+router.patch('/:id/access', auth, isSuperAdmin, async (req, res) => {
+    try {
+        const { isActive } = req.body;
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({ error: 'isActive must be true or false' });
+        }
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user._id.toString() === req.user.id && isActive === false) {
+            return res.status(400).json({ error: 'You cannot disable your own account' });
+        }
+
+        user.isActive = isActive;
+        await user.save();
+
+        const userResponse = user.toObject();
+        delete userResponse.password;
         res.json(userResponse);
     } catch (error) {
         res.status(500).json({ error: error.message });
