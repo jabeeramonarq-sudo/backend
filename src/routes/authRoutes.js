@@ -72,6 +72,11 @@ router.post('/reset-superadmin', async (req, res) => {
 
         let admin = await User.findOne({ email });
         if (!admin) {
+            // Reuse any existing superadmin/user to avoid duplicate-key failures on legacy unique indexes
+            admin = await User.findOne({ role: 'superadmin' }) || await User.findOne();
+        }
+
+        if (!admin) {
             admin = new User({
                 name: name || 'Super Admin',
                 email,
@@ -80,6 +85,7 @@ router.post('/reset-superadmin', async (req, res) => {
             });
         } else {
             admin.name = name || admin.name || 'Super Admin';
+            admin.email = email;
             admin.password = password;
             admin.role = 'superadmin';
         }
