@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -54,16 +54,18 @@ const mongoOptions = {
     autoIndex: true,
 };
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amonarq', mongoOptions)
-    .then(() => {
-        console.log('✅ Connected to MongoDB');
-        console.log('Database:', mongoose.connection.name);
-    })
-    .catch(err => {
-        console.error('❌ MongoDB connection error:', err.message);
-        console.error('Full error:', err);
-        // Don't exit in serverless - let it retry on next request
-    });
+if (process.env.MONGODB_URI) {
+    mongoose.connect(process.env.MONGODB_URI, mongoOptions)
+        .then(() => {
+            console.log('Connected to MongoDB');
+            console.log('Database:', mongoose.connection.name);
+        })
+        .catch(err => {
+            console.error('MongoDB connection error:', err.message);
+        });
+} else {
+    console.warn('MONGODB_URI is not set; database connection skipped.');
+}
 
 // Handle connection events
 mongoose.connection.on('error', err => {
