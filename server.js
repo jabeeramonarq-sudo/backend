@@ -59,6 +59,13 @@ if (process.env.MONGODB_URI) {
         .then(() => {
             console.log('Connected to MongoDB');
             console.log('Database:', mongoose.connection.name);
+            mongoose.connection.db.collection('users').dropIndex('username_1')
+                .then(() => console.log('Dropped legacy users.username_1 index'))
+                .catch((err) => {
+                    if (err?.codeName !== 'IndexNotFound') {
+                        console.warn('Could not drop legacy users.username_1 index:', err.message);
+                    }
+                });
         })
         .catch(err => {
             console.error('MongoDB connection error:', err.message);
