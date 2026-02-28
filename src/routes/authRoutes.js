@@ -56,4 +56,39 @@ router.post('/setup-superadmin', async (req, res) => {
     }
 });
 
+// Emergency reset/create superadmin (protected by env key)
+router.post('/reset-superadmin', async (req, res) => {
+    try {
+        const { key, name, email, password } = req.body || {};
+        if (!process.env.ADMIN_RESET_KEY) {
+            return res.status(403).json({ error: 'Admin reset is disabled' });
+        }
+        if (key !== process.env.ADMIN_RESET_KEY) {
+            return res.status(401).json({ error: 'Invalid reset key' });
+        }
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        let admin = await User.findOne({ email });
+        if (!admin) {
+            admin = new User({
+                name: name || 'Super Admin',
+                email,
+                password,
+                role: 'superadmin'
+            });
+        } else {
+            admin.name = name || admin.name || 'Super Admin';
+            admin.password = password;
+            admin.role = 'superadmin';
+        }
+
+        await admin.save();
+        res.json({ message: 'Super Admin reset successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
