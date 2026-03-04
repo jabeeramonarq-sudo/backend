@@ -93,6 +93,7 @@ app.use('/api/upload', require('./src/routes/uploadRoutes'));
 app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
 app.use('/api/email', require('./src/routes/emailRoutes'));
 app.use('/api/content', require('./src/routes/contentRoutes'));
+app.use('/api/leads', require('./src/routes/leadRoutes'));
 
 // Health check
 app.get('/health', (req, res) => res.status(200).send('API is healthy'));
@@ -115,3 +116,4 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
         console.log(`Server running on port ${PORT}`);
     });
 }
+
