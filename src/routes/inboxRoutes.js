@@ -50,15 +50,15 @@ router.post('/submit', async (req, res) => {
         });
         await newContact.save();
 
-        // Send notification email to admin
-        try {
-            await sendContactEmail(name, email, subject, message);
-        } catch (emailError) {
-            console.error('Failed to send email notification:', emailError);
-            // Don't fail the request if email fails
-        }
-
+        // Respond immediately, send email in background
         res.status(201).json({ message: 'Message sent successfully' });
+        setImmediate(async () => {
+            try {
+                await sendContactEmail(name, email, subject, message);
+            } catch (emailError) {
+                console.error('Failed to send email notification:', emailError);
+            }
+        });
     } catch (error) {
         console.error('Submission error:', error);
         res.status(500).json({ error: 'An internal server error occurred. Please try again later.' });
@@ -96,12 +96,16 @@ router.post('/:id/reply', auth, async (req, res) => {
 
         if (!contact) return res.status(404).json({ error: 'Message not found' });
 
-        await sendMail(contact.email, `Re: ${contact.subject || 'Your inquiry'}`, replyMessage, `<p>${replyMessage}</p>`);
-
-        contact.isReplied = true;
-        await contact.save();
-
         res.json({ message: 'Reply sent successfully' });
+        setImmediate(async () => {
+            try {
+                await sendMail(contact.email, `Re: ${contact.subject || 'Your inquiry'}`, replyMessage, `<p>${replyMessage}</p>`);
+                contact.isReplied = true;
+                await contact.save();
+            } catch (error) {
+                console.error('Reply send failed:', error);
+            }
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
