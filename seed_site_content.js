@@ -630,7 +630,8 @@ const seedSettings = {
         recipientEmail: 'contact@amonarq.com'
     },
     featureFlags: {
-        emailCaptureEnabled: true
+        emailCaptureEnabled: true,
+        showPhoneNumber: false
     },
     socialMedia: [
         { platform: 'LinkedIn', url: 'https://linkedin.com/company/amonarq', icon: 'linkedin' },
