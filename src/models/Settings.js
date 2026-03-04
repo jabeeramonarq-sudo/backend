@@ -15,6 +15,10 @@ const settingsSchema = new mongoose.Schema({
     contactForm: {
         recipientEmail: { type: String, default: '' }
     },
+    footer: {
+        badgeText: { type: String, default: '' },
+        copyrightText: { type: String, default: '' }
+    },
     featureFlags: {
         emailCaptureEnabled: { type: Boolean, default: true },
         showPhoneNumber: { type: Boolean, default: false }
