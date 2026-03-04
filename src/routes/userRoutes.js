@@ -2,10 +2,28 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const mongoose = require('mongoose');
+
+const ensureDbConnected = async () => {
+    if (mongoose.connection.readyState === 1) return;
+    if (!process.env.MONGODB_URI) {
+        throw new Error('MONGODB_URI is not set');
+    }
+    await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        retryWrites: true,
+        retryReads: true,
+        autoIndex: true,
+    });
+};
 
 // Middleware to check if user is super admin
 const isSuperAdmin = async (req, res, next) => {
     try {
+        await ensureDbConnected();
         const user = await User.findById(req.user.id);
         if (!user || user.role !== 'superadmin') {
             return res.status(403).json({ error: 'Access denied. Super admin only.' });
@@ -19,6 +37,7 @@ const isSuperAdmin = async (req, res, next) => {
 // Get all users (super admin only)
 router.get('/', auth, isSuperAdmin, async (req, res) => {
     try {
+        await ensureDbConnected();
         const users = await User.find().select('-password').sort({ createdAt: -1 });
         res.json(users);
     } catch (error) {
@@ -29,6 +48,7 @@ router.get('/', auth, isSuperAdmin, async (req, res) => {
 // Create new user (super admin only)
 router.post('/', auth, isSuperAdmin, async (req, res) => {
     try {
+        await ensureDbConnected();
         const { name, email, password, role } = req.body;
 
         // Check if user already exists
@@ -60,6 +80,7 @@ router.post('/', auth, isSuperAdmin, async (req, res) => {
 // Update user (super admin only)
 router.put('/:id', auth, isSuperAdmin, async (req, res) => {
     try {
+        await ensureDbConnected();
         const { name, email, role, password } = req.body;
         const user = await User.findById(req.params.id);
 
@@ -88,6 +109,7 @@ router.put('/:id', auth, isSuperAdmin, async (req, res) => {
 // Toggle user access (super admin only)
 router.patch('/:id/access', auth, isSuperAdmin, async (req, res) => {
     try {
+        await ensureDbConnected();
         const { isActive } = req.body;
         if (typeof isActive !== 'boolean') {
             return res.status(400).json({ error: 'isActive must be true or false' });
@@ -116,6 +138,7 @@ router.patch('/:id/access', auth, isSuperAdmin, async (req, res) => {
 // Delete user (super admin only)
 router.delete('/:id', auth, isSuperAdmin, async (req, res) => {
     try {
+        await ensureDbConnected();
         const user = await User.findById(req.params.id);
 
         if (!user) {
