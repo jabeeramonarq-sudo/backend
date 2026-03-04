@@ -4,10 +4,28 @@ const Contact = require('../models/Contact');
 const { sendContactEmail } = require('../services/emailService');
 const sendMail = require('../config/mail');
 const auth = require('../middleware/auth');
+const mongoose = require('mongoose');
+
+const ensureDbConnected = async () => {
+    if (mongoose.connection.readyState === 1) return;
+    if (!process.env.MONGODB_URI) {
+        throw new Error('MONGODB_URI is not set');
+    }
+    await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        retryWrites: true,
+        retryReads: true,
+        autoIndex: true,
+    });
+};
 
 // Public route to submit contact form
 router.post('/submit', async (req, res) => {
     try {
+        await ensureDbConnected();
         const { name, email, subject, message } = req.body;
 
         // Backend Validation
@@ -50,6 +68,7 @@ router.post('/submit', async (req, res) => {
 // Admin: Get all messages
 router.get('/', auth, async (req, res) => {
     try {
+        await ensureDbConnected();
         const messages = await Contact.find().sort({ createdAt: -1 });
         res.json(messages);
     } catch (error) {
@@ -60,6 +79,7 @@ router.get('/', auth, async (req, res) => {
 // Admin: Mark as read
 router.patch('/:id/read', auth, async (req, res) => {
     try {
+        await ensureDbConnected();
         const contact = await Contact.findByIdAndUpdate(req.params.id, { isRead: true }, { new: true });
         res.json(contact);
     } catch (error) {
@@ -70,6 +90,7 @@ router.patch('/:id/read', auth, async (req, res) => {
 // Admin: Reply to message
 router.post('/:id/reply', auth, async (req, res) => {
     try {
+        await ensureDbConnected();
         const { replyMessage } = req.body;
         const contact = await Contact.findById(req.params.id);
 
@@ -89,6 +110,7 @@ router.post('/:id/reply', auth, async (req, res) => {
 // Admin: Delete message
 router.delete('/:id', auth, async (req, res) => {
     try {
+        await ensureDbConnected();
         await Contact.findByIdAndDelete(req.params.id);
         res.json({ message: 'Message deleted' });
     } catch (error) {
