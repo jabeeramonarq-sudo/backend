@@ -26,7 +26,8 @@ const settingsSchema = new mongoose.Schema({
     },
     featureFlags: {
         emailCaptureEnabled: { type: Boolean, default: true },
-        showPhoneNumber: { type: Boolean, default: false }
+        showPhoneNumber: { type: Boolean, default: false },
+        seoEnabled: { type: Boolean, default: true }
     },
     socialMedia: [
         {
