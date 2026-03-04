@@ -19,6 +19,11 @@ const settingsSchema = new mongoose.Schema({
         badgeText: { type: String, default: '' },
         copyrightText: { type: String, default: '' }
     },
+    seo: {
+        siteTitle: { type: String, default: '' },
+        defaultDescription: { type: String, default: '' },
+        ogImage: { type: String, default: '' }
+    },
     featureFlags: {
         emailCaptureEnabled: { type: Boolean, default: true },
         showPhoneNumber: { type: Boolean, default: false }

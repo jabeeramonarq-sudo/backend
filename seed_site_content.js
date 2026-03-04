@@ -633,6 +633,11 @@ const seedSettings = {
         badgeText: 'DPIIT Recognised Startup',
         copyrightText: '© {year} Amonarq Systems. All rights reserved.'
     },
+    seo: {
+        siteTitle: 'Amonarq - Designing Systems for Continuity',
+        defaultDescription: 'Amonarq builds digital products focused on reducing chaos, protecting trust, and enabling uninterrupted human flow.',
+        ogImage: '/og-image.png'
+    },
     featureFlags: {
         emailCaptureEnabled: true,
         showPhoneNumber: false
