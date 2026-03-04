@@ -629,6 +629,9 @@ const seedSettings = {
     contactForm: {
         recipientEmail: 'contact@amonarq.com'
     },
+    featureFlags: {
+        emailCaptureEnabled: true
+    },
     socialMedia: [
         { platform: 'LinkedIn', url: 'https://linkedin.com/company/amonarq', icon: 'linkedin' },
         { platform: 'X', url: 'https://x.com/amonarq', icon: 'twitter' }

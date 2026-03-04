@@ -15,6 +15,9 @@ const settingsSchema = new mongoose.Schema({
     contactForm: {
         recipientEmail: { type: String, default: '' }
     },
+    featureFlags: {
+        emailCaptureEnabled: { type: Boolean, default: true }
+    },
     socialMedia: [
         {
             platform: { type: String },
