@@ -3,6 +3,23 @@ const router = express.Router();
 const Lead = require('../models/Lead');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
+const mongoose = require('mongoose');
+
+const ensureDbConnected = async () => {
+    if (mongoose.connection.readyState === 1) return;
+    if (!process.env.MONGODB_URI) {
+        throw new Error('MONGODB_URI is not set');
+    }
+    await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        retryWrites: true,
+        retryReads: true,
+        autoIndex: true,
+    });
+};
 
 const isSuperAdmin = async (req, res, next) => {
     try {
@@ -27,6 +44,8 @@ router.post('/', async (req, res) => {
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ error: 'Valid email is required' });
         }
+
+        await ensureDbConnected();
 
         const lead = new Lead({
             name: name.trim(),
