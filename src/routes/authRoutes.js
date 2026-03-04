@@ -2,9 +2,27 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const mongoose = require('mongoose');
+
+const ensureDbConnected = async () => {
+    if (mongoose.connection.readyState === 1) return;
+    if (!process.env.MONGODB_URI) {
+        throw new Error('MONGODB_URI is not set');
+    }
+    await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        retryWrites: true,
+        retryReads: true,
+        autoIndex: true,
+    });
+};
 
 router.post('/login', async (req, res) => {
     try {
+        await ensureDbConnected();
         const { email, password } = req.body;
         console.log(`Login attempt for: ${email}`);
 
@@ -55,6 +73,7 @@ router.post('/login', async (req, res) => {
 // Check if setup is needed
 router.get('/setup-status', async (req, res) => {
     try {
+        await ensureDbConnected();
         const count = await User.countDocuments();
         res.json({ needsSetup: count === 0 });
     } catch (error) {
@@ -65,6 +84,7 @@ router.get('/setup-status', async (req, res) => {
 // Initial Setup
 router.post('/setup-superadmin', async (req, res) => {
     try {
+        await ensureDbConnected();
         const count = await User.countDocuments();
         if (count > 0) {
             return res.status(403).json({ error: 'Setup already completed' });
@@ -83,6 +103,7 @@ router.post('/setup-superadmin', async (req, res) => {
 // Emergency reset/create superadmin (protected by env key)
 router.post('/reset-superadmin', async (req, res) => {
     try {
+        await ensureDbConnected();
         const { key, name, email, password } = req.body || {};
         if (!process.env.ADMIN_RESET_KEY) {
             return res.status(403).json({ error: 'Admin reset is disabled' });
